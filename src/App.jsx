@@ -293,7 +293,11 @@ export default function App() {
       email: updatedProfile.email,
       avatar: updatedProfile.avatar
     }));
-    addToast('Settings configurations saved', 'success');
+    if (updatedProfile.passwordUpdated) {
+      addToast('Profile & password updated successfully', 'success');
+    } else {
+      addToast('Settings configurations saved', 'success');
+    }
   };
 
   // Filter datasets based on active tenant selectedClientId

@@ -9,7 +9,10 @@ import {
   Sun,
   ShieldCheck,
   Save,
-  Globe
+  Globe,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 import Input from '../components/ui/Input';
@@ -18,6 +21,14 @@ import Button from '../components/ui/Button';
 export default function SettingsModule({ userProfile, onUpdateProfile, darkMode, setDarkMode }) {
   const [activeSubTab, setActiveSubTab] = useState('profile');
   const [formData, setFormData] = useState({ ...userProfile, language: 'en' });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -30,6 +41,23 @@ export default function SettingsModule({ userProfile, onUpdateProfile, darkMode,
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
         errs.email = 'Please provide a valid email format';
       }
+
+      // Password validation (if user typed in any password field)
+      if (passwordData.currentPassword || passwordData.newPassword || passwordData.confirmPassword) {
+        if (!passwordData.currentPassword) {
+          errs.currentPassword = 'Enter current password to set a new one';
+        }
+        if (!passwordData.newPassword) {
+          errs.newPassword = 'New password is required';
+        } else if (passwordData.newPassword.length < 6) {
+          errs.newPassword = 'Password must be at least 6 characters';
+        }
+        if (!passwordData.confirmPassword) {
+          errs.confirmPassword = 'Confirm your new password';
+        } else if (passwordData.newPassword !== passwordData.confirmPassword) {
+          errs.confirmPassword = 'Passwords do not match';
+        }
+      }
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -41,7 +69,11 @@ export default function SettingsModule({ userProfile, onUpdateProfile, darkMode,
 
     setIsSaving(true);
     setTimeout(() => {
-      onUpdateProfile(formData);
+      onUpdateProfile({
+        ...formData,
+        ...(passwordData.newPassword ? { passwordUpdated: true } : {})
+      });
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setIsSaving(false);
     }, 600); // simulated networking latency
   };
@@ -170,6 +202,109 @@ export default function SettingsModule({ userProfile, onUpdateProfile, darkMode,
                     <option value="es">Español (Spanish)</option>
                     <option value="fr">Français (French)</option>
                   </select>
+                </div>
+
+                {/* Account Security & Password Section */}
+                <div className="col-span-2 pt-4 border-t dark:border-slate-800 space-y-3.5">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-sky-500/10 text-sky-500">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Account Password & Security
+                      </h4>
+                      <p className="text-[11px] text-slate-400">
+                        Leave password fields empty if you only wish to update profile details
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                    {/* Current Password */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        Current Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showCurrentPassword ? "text" : "password"}
+                          value={passwordData.currentPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                          placeholder="••••••••"
+                          className={`w-full pl-3.5 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border dark:border-slate-800 focus:border-sky-500 focus:outline-none rounded-xl text-sm transition-all focus:ring-2 focus:ring-sky-500/20 ${
+                            errors.currentPassword ? 'border-red-500 focus:border-red-500' : ''
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        >
+                          {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {errors.currentPassword && (
+                        <p className="text-[11px] text-red-500 font-semibold">{errors.currentPassword}</p>
+                      )}
+                    </div>
+
+                    {/* New Password */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        New Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showNewPassword ? "text" : "password"}
+                          value={passwordData.newPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                          placeholder="Min. 6 characters"
+                          className={`w-full pl-3.5 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border dark:border-slate-800 focus:border-sky-500 focus:outline-none rounded-xl text-sm transition-all focus:ring-2 focus:ring-sky-500/20 ${
+                            errors.newPassword ? 'border-red-500 focus:border-red-500' : ''
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        >
+                          {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {errors.newPassword && (
+                        <p className="text-[11px] text-red-500 font-semibold">{errors.newPassword}</p>
+                      )}
+                    </div>
+
+                    {/* Confirm New Password */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        Confirm Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={passwordData.confirmPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                          placeholder="Re-enter new password"
+                          className={`w-full pl-3.5 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border dark:border-slate-800 focus:border-sky-500 focus:outline-none rounded-xl text-sm transition-all focus:ring-2 focus:ring-sky-500/20 ${
+                            errors.confirmPassword ? 'border-red-500 focus:border-red-500' : ''
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {errors.confirmPassword && (
+                        <p className="text-[11px] text-red-500 font-semibold">{errors.confirmPassword}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
